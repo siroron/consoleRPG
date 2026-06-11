@@ -5,19 +5,23 @@ import { SceneManager } from './core/SceneManager.js';
 import { EventBus } from './core/EventBus.js';
 import { RNG } from './core/RNG.js';
 import { DataLoader } from './data-access/DataLoader.js';
+import { SaveManager } from './data-access/SaveManager.js';
 import { TitleScene } from './scenes/TitleScene.js';
 import { FieldScene } from './scenes/FieldScene.js';
 import { BattleScene } from './scenes/BattleScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
+import { MenuScene } from './scenes/MenuScene.js';
+import { ShopScene } from './scenes/ShopScene.js';
 
 async function main(): Promise<void> {
   const eventBus    = new EventBus();
   const gameState   = new GameState();
   const rng         = new RNG();
   const dataLoader  = new DataLoader();
+  const saveManager = new SaveManager();
   const sceneManager = new SceneManager();
 
-  const ctx = { sceneManager, gameState, eventBus, rng, dataLoader };
+  const ctx = { sceneManager, gameState, eventBus, rng, dataLoader, saveManager };
 
   try {
     await dataLoader.getMonsters();
@@ -31,6 +35,8 @@ async function main(): Promise<void> {
   sceneManager.register('field',   () => new FieldScene(ctx));
   sceneManager.register('battle',  () => new BattleScene(ctx));
   sceneManager.register('gameover', () => new GameOverScene(ctx));
+  sceneManager.register('menu',     () => new MenuScene(ctx));
+  sceneManager.register('shop',     () => new ShopScene(ctx));
 
   const loop = new GameLoop(sceneManager, gameState);
 

@@ -2,6 +2,7 @@ import type { SceneName } from './EventBus.js';
 import type { PlayerData } from '../entities/Player.js';
 
 export type { PlayerData };
+export type AreaId = 'town' | 'forest' | 'cave';
 
 export interface GameStateSnapshot {
   currentScene: SceneName;
@@ -9,6 +10,9 @@ export interface GameStateSnapshot {
   gold: number;
   party: PlayerData[];
   pendingBattle: { enemyIds: string[] } | null;
+  ownedEquipment: string[];
+  inventory: { itemId: string; count: number }[];
+  currentArea: AreaId;
 }
 
 const DEFAULT_STATE: GameStateSnapshot = {
@@ -17,6 +21,9 @@ const DEFAULT_STATE: GameStateSnapshot = {
   gold: 0,
   party: [],
   pendingBattle: null,
+  ownedEquipment: [],
+  inventory: [],
+  currentArea: 'town',
 };
 
 export class GameState {

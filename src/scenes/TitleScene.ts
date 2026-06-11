@@ -3,6 +3,7 @@ import boxen from 'boxen';
 import { Menu } from '../ui/Menu.js';
 import { Scene } from './Scene.js';
 import type { SceneContext } from './Scene.js';
+import { Player } from '../entities/Player.js';
 
 type TitleChoice = 'new_game' | 'continue' | 'quit';
 
@@ -17,7 +18,7 @@ export class TitleScene extends Scene {
   }
 
   async update(): Promise<void> {
-    const hasSave = false; // SaveManager stub always returns false
+    const hasSave = await this.ctx.saveManager.hasSave(1);
 
     const choice = await Menu.select<TitleChoice>('Select an option', [
       { value: 'new_game', name: chalk.white('New Game') },
@@ -27,13 +28,31 @@ export class TitleScene extends Scene {
 
     switch (choice) {
       case 'new_game':
+        this.ctx.gameState.set('party', [Player.createDefault().toData()]);
+        this.ctx.gameState.set('gold', 100);
+        this.ctx.gameState.set('ownedEquipment', ['iron_sword', 'leather_mail']);
+        this.ctx.gameState.set('currentArea', 'town');
         await this.ctx.sceneManager.transition('field');
+        break;
+      case 'continue':
+        await this.loadAndContinue();
         break;
       case 'quit':
         await this.ctx.eventBus.emit('game:quit', {});
         break;
-      case 'continue':
-        break;
+    }
+  }
+
+  private async loadAndContinue(): Promise<void> {
+    try {
+      const snapshot = await this.ctx.saveManager.load(1);
+      this.ctx.gameState.restore(snapshot);
+      await this.ctx.sceneManager.transition('field');
+    } catch (err) {
+      process.stdout.write('\x1Bc');
+      this.renderBanner();
+      console.log(chalk.red(`  セーブデータの読み込みに失敗しました: ${String(err)}`));
+      console.log();
     }
   }
 

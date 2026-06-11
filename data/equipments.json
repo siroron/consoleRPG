@@ -1,1 +1,74 @@
-[]
+[
+  {
+    "id": "iron_sword",
+    "name": "鉄の剣",
+    "type": "weapon",
+    "statBonus": { "attack": 10 },
+    "price": 100,
+    "description": "堅固な鉄製の剣"
+  },
+  {
+    "id": "steel_sword",
+    "name": "鋼の剣",
+    "type": "weapon",
+    "statBonus": { "attack": 20 },
+    "price": 300,
+    "description": "鋭利な鋼の剣"
+  },
+  {
+    "id": "fire_staff",
+    "name": "炎の杖",
+    "type": "weapon",
+    "statBonus": { "magic": 15, "attack": 2 },
+    "price": 250,
+    "description": "魔力を高める紅蓮の杖"
+  },
+  {
+    "id": "leather_mail",
+    "name": "革の鎧",
+    "type": "armor",
+    "statBonus": { "defense": 8 },
+    "price": 80,
+    "description": "軽くて動きやすい革鎧"
+  },
+  {
+    "id": "iron_shield",
+    "name": "鉄の盾",
+    "type": "armor",
+    "statBonus": { "defense": 16, "maxHp": 10 },
+    "price": 180,
+    "description": "頑丈な鉄製の盾"
+  },
+  {
+    "id": "chain_mail",
+    "name": "チェインメイル",
+    "type": "armor",
+    "statBonus": { "defense": 22, "maxHp": 20 },
+    "price": 420,
+    "description": "隙のない鎖鎧"
+  },
+  {
+    "id": "speed_ring",
+    "name": "疾風の指輪",
+    "type": "accessory",
+    "statBonus": { "speed": 5, "luck": 3 },
+    "price": 200,
+    "description": "身のこなしを早める指輪"
+  },
+  {
+    "id": "magic_ring",
+    "name": "魔力の指輪",
+    "type": "accessory",
+    "statBonus": { "magic": 8, "maxMp": 10 },
+    "price": 260,
+    "description": "魔力を高める蒼い指輪"
+  },
+  {
+    "id": "brave_bangle",
+    "name": "勇者の腕輪",
+    "type": "accessory",
+    "statBonus": { "attack": 5, "defense": 5, "luck": 5 },
+    "price": 500,
+    "description": "勇者の証とされる腕輪"
+  }
+]

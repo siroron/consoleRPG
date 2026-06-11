@@ -31,5 +31,27 @@
     "exp": 18,
     "gold": 10,
     "drops": []
+  },
+  {
+    "id": "shadow_wolf",
+    "name": "シャドウウルフ",
+    "element": "wind",
+    "stats": { "maxHp": 70, "maxMp": 8, "attack": 22, "defense": 10, "magic": 6, "speed": 18, "luck": 7 },
+    "skills": ["tackle", "wind_slash"],
+    "aiType": "aggressive",
+    "exp": 35,
+    "gold": 20,
+    "drops": []
+  },
+  {
+    "id": "stone_golem",
+    "name": "ストーンゴーレム",
+    "element": "earth",
+    "stats": { "maxHp": 120, "maxMp": 0, "attack": 28, "defense": 25, "magic": 0, "speed": 4, "luck": 2 },
+    "skills": ["tackle"],
+    "aiType": "defensive",
+    "exp": 55,
+    "gold": 35,
+    "drops": []
   }
 ]

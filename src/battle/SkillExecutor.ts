@@ -34,6 +34,15 @@ export function executeSkill(
       const healed = calculateHeal(actor, skill);
       target.heal(healed);
       hit = { target, damage: 0, healed, statusApplied: null, isCrit: false, elementMultiplier: 1.0 };
+    } else if (skill.power === 0) {
+      // Status-only skill (no damage, just apply effect)
+      let statusApplied: StatusEffectType | null = null;
+      if (skill.effect && skill.effectRate !== undefined && rng() < skill.effectRate) {
+        const duration = STATUS_CONFIG[skill.effect].maxDuration;
+        target.addStatusEffect(skill.effect, duration);
+        statusApplied = skill.effect;
+      }
+      hit = { target, damage: 0, healed: 0, statusApplied, isCrit: false, elementMultiplier: 1.0 };
     } else {
       // Damage
       const { damage, isCrit, elementMultiplier } = calculateDamage(actor, target, skill, rng);

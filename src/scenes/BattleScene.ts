@@ -3,6 +3,9 @@ import { Scene } from './Scene.js';
 import type { SceneContext } from './Scene.js';
 import { BattleEngine } from '../battle/BattleEngine.js';
 import type { BattleAction } from '../battle/ActionResolver.js';
+import { applyEquipmentBonuses } from '../systems/EquipmentSystem.js';
+import { getExpForLevel, getStatGrowthForLevel, getExpToNextLevel } from '../systems/LevelSystem.js';
+import { getSkillsLearnedAtLevel } from '../systems/SkillTree.js';
 import { Party } from '../entities/Party.js';
 import { Player } from '../entities/Player.js';
 import type { PlayerData } from '../entities/Player.js';
@@ -26,17 +29,23 @@ export class BattleScene extends Scene {
       return;
     }
 
-    // Load data
-    const [allMonsters, allSkills] = await Promise.all([
+    const [allMonsters, allSkills, allEquipments] = await Promise.all([
       this.ctx.dataLoader.getMonsters(),
       this.ctx.dataLoader.getSkills(),
+      this.ctx.dataLoader.getEquipments(),
     ]);
     const monsterMap = new Map(allMonsters.map((m) => [m.id, m]));
     const skillMap = new Map<string, SkillData>(allSkills.map((s) => [s.id, s]));
+    const equipmentMap = new Map(allEquipments.map((e) => [e.id, e]));
 
-    // Build combatants
+    // Build party with equipment bonuses applied
     const partyData = this.ctx.gameState.get('party');
-    const party = new Party(partyData.map((d) => Player.fromData(d)));
+    const players = partyData.map((d) => {
+      const p = Player.fromData(d);
+      applyEquipmentBonuses(p, equipmentMap);
+      return p;
+    });
+    const party = new Party(players);
 
     const enemies: Monster[] = pending.enemyIds.map((id) => {
       const data = monsterMap.get(id);
@@ -48,8 +57,8 @@ export class BattleScene extends Scene {
     const view = new BattleView(party, enemies);
     const logger = new Logger();
 
-    // Battle loop
     logger.log(chalk.green('戦闘開始！'));
+    for (const e of enemies) logger.log(chalk.dim(`  ${e.name} が現れた！`));
     engine.initTurnQueue();
 
     while (!engine.isOver) {
@@ -61,12 +70,11 @@ export class BattleScene extends Scene {
         continue;
       }
 
-      // Process status effects at turn start
       const { canAct, logs: statusLogs } = engine.processCurrentActorStatus();
       for (const log of statusLogs) logger.log(log);
 
       if (!canAct) {
-        this.renderAndLog(view, logger);
+        this.renderScreen(view, logger);
         await sleep(900);
         engine.advanceTurn();
         if (engine.checkBattleEnd()) break;
@@ -76,21 +84,19 @@ export class BattleScene extends Scene {
       let actionLogs: string[];
 
       if (actor.isPlayer) {
-        // Player turn: show battle state then get input
-        this.renderAndLog(view, logger);
+        this.renderScreen(view, logger);
         console.log(chalk.cyan.bold(`⚔  ${actor.name} のターン`));
         const action = await this.getPlayerAction(actor as Player, engine, skillMap);
         actionLogs = engine.executeAction(actor, action);
         for (const log of actionLogs) logger.log(log);
-        this.renderAndLog(view, logger);
+        this.renderScreen(view, logger);
         await Menu.input('');
       } else {
-        // Enemy turn: auto-decide, show result with brief pause
-        this.renderAndLog(view, logger);
+        this.renderScreen(view, logger);
         const action = engine.decideEnemyAction(actor as Monster);
         actionLogs = engine.executeAction(actor, action);
         for (const log of actionLogs) logger.log(log);
-        this.renderAndLog(view, logger);
+        this.renderScreen(view, logger);
         await sleep(900);
       }
 
@@ -98,35 +104,65 @@ export class BattleScene extends Scene {
       if (engine.checkBattleEnd()) break;
     }
 
-    // Clear pending battle and persist party state
     this.ctx.gameState.set('pendingBattle', null);
-    const updatedParty: PlayerData[] = party.members.map((p) => p.toData());
-    this.ctx.gameState.set('party', updatedParty);
 
-    this.renderAndLog(view, logger);
+    this.renderScreen(view, logger);
 
     if (engine.victory) {
-      await this.handleVictory(engine);
+      await this.handleVictory(engine, skillMap, party);
+      const updatedParty: PlayerData[] = party.members.map((p) => p.toData());
+      this.ctx.gameState.set('party', updatedParty);
       await this.ctx.sceneManager.transition('field');
     } else {
       console.log(chalk.red.bold('\n💀 全滅…'));
       await Menu.input('');
+      const updatedParty: PlayerData[] = party.members.map((p) => p.toData());
+      this.ctx.gameState.set('party', updatedParty);
       await this.ctx.sceneManager.transition('gameover');
     }
   }
 
-  private renderAndLog(view: BattleView, logger: Logger): void {
+  private renderScreen(view: BattleView, logger: Logger): void {
     process.stdout.write('\x1Bc');
     view.render(logger);
   }
 
-  private async handleVictory(engine: BattleEngine): Promise<void> {
+  private async handleVictory(
+    engine: BattleEngine,
+    skillMap: Map<string, SkillData>,
+    party: Party,
+  ): Promise<void> {
     const { expGained, goldGained } = engine.getBattleRewards();
     console.log(chalk.yellow.bold('🏆 勝利！'));
     console.log(chalk.white(`  EXP + ${expGained}`));
     console.log(chalk.yellow(`  Gold + ${goldGained}`));
     this.ctx.gameState.set('gold', this.ctx.gameState.get('gold') + goldGained);
-    await Menu.input('続ける…');
+
+    // Apply EXP and process level-ups for each alive member
+    for (const player of party.members) {
+      player.exp += expGained;
+      while (player.exp >= getExpForLevel(player.level + 1)) {
+        const growth = getStatGrowthForLevel(player.level + 1);
+        player.levelUp(growth);
+        console.log(chalk.green.bold(`\n  ⬆ レベルアップ！${player.name} は Lv.${player.level} になった！`));
+        const g = growth;
+        console.log(chalk.dim(`     HP+${g.maxHp ?? 0} MP+${g.maxMp ?? 0} ATK+${g.attack ?? 0} DEF+${g.defense ?? 0} MAG+${g.magic ?? 0}`));
+
+        // Learn new skills
+        for (const skillId of getSkillsLearnedAtLevel(player.level)) {
+          if (!player.skills.includes(skillId)) {
+            player.skills.push(skillId);
+            const skill = skillMap.get(skillId);
+            if (skill) console.log(chalk.cyan(`     ✨ ${skill.name} を習得した！`));
+          }
+        }
+      }
+      const toNext = getExpToNextLevel(player.level);
+      const current = player.exp - getExpForLevel(player.level);
+      console.log(chalk.dim(`  ${player.name} EXP: ${current}/${toNext}`));
+    }
+
+    await Menu.input('\n続ける…');
   }
 
   private async getPlayerAction(
@@ -134,38 +170,41 @@ export class BattleScene extends Scene {
     engine: BattleEngine,
     skillMap: Map<string, SkillData>,
   ): Promise<BattleAction> {
-    const isSilenced = actor.hasStatus('silence');
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const isSilenced = actor.hasStatus('silence');
 
-    type MainChoice = 'fight' | 'defend';
-    const mainChoice = await Menu.select<MainChoice>('コマンド', [
-      { value: 'fight', name: '⚔  たたかう' },
-      { value: 'defend', name: '🛡  ぼうぎょ' },
-    ]);
+      type MainChoice = 'fight' | 'defend';
+      const main = await Menu.select<MainChoice>('コマンド', [
+        { value: 'fight',  name: '⚔  たたかう' },
+        { value: 'defend', name: '🛡  ぼうぎょ' },
+      ]);
+      if (main === 'defend') return { type: 'defend' };
 
-    if (mainChoice === 'defend') return { type: 'defend' };
+      const availableSkills = actor.skills
+        .map((id) => skillMap.get(id))
+        .filter((s): s is SkillData => s !== undefined);
 
-    // Skill selection
-    const availableSkills = actor.skills
-      .map((id) => skillMap.get(id))
-      .filter((s): s is SkillData => s !== undefined);
+      const skillChoices: { value: string; name: string; disabled?: string | false }[] = [
+        ...availableSkills.map((s) => {
+          const noMp     = actor.currentMp < s.mpCost;
+          const silenced = isSilenced && s.mpCost > 0;
+          return {
+            value: s.id,
+            name: `${s.name}  [MP: ${s.mpCost}]`,
+            disabled: (noMp ? '(MPが不足)' : silenced ? '(沈黙中)' : false) as string | false,
+          };
+        }),
+        { value: '__back__', name: chalk.dim('↩  もどる') },
+      ];
 
-    const skillChoices = availableSkills.map((s) => {
-      const notEnoughMp = actor.currentMp < s.mpCost;
-      const silenced = isSilenced && s.mpCost > 0;
-      const disabled = notEnoughMp ? '(MPが不足)' : silenced ? '(沈黙中)' : false;
-      return {
-        value: s.id,
-        name: `${s.name}  [MP: ${s.mpCost}]`,
-        disabled,
-      };
-    });
+      const skillId = await Menu.select<string>('スキル', skillChoices);
+      if (skillId === '__back__') continue;
 
-    const skillId = await Menu.select<string>('スキルを選べ', skillChoices);
-    const skill = skillMap.get(skillId)!;
-
-    // Target selection
-    const targets = await this.selectTargets(skill, actor, engine);
-    return { type: 'skill', skill, targets };
+      const skill = skillMap.get(skillId)!;
+      const targets = await this.selectTargets(skill, actor, engine);
+      return { type: 'skill', skill, targets };
+    }
   }
 
   private async selectTargets(
@@ -176,13 +215,13 @@ export class BattleScene extends Scene {
     if (skill.target === 'self') return [actor];
     if (skill.target === 'all') return engine.aliveEnemies;
 
-    const aliveEnemies = engine.aliveEnemies;
-    if (aliveEnemies.length === 1) return aliveEnemies;
+    const alive = engine.aliveEnemies;
+    if (alive.length === 1) return alive;
 
     const idx = await Menu.select<string>(
       'ターゲット',
-      aliveEnemies.map((e, i) => ({ value: String(i), name: e.name })),
+      alive.map((e, i) => ({ value: String(i), name: e.name })),
     );
-    return [aliveEnemies[parseInt(idx)]];
+    return [alive[parseInt(idx)]];
   }
 }

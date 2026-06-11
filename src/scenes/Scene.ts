@@ -3,6 +3,7 @@ import type { GameState } from '../core/GameState.js';
 import type { EventBus } from '../core/EventBus.js';
 import type { RNG } from '../core/RNG.js';
 import type { DataLoader } from '../data-access/DataLoader.js';
+import type { SaveManager } from '../data-access/SaveManager.js';
 
 export interface SceneContext {
   sceneManager: SceneManager;
@@ -10,6 +11,7 @@ export interface SceneContext {
   eventBus: EventBus;
   rng: RNG;
   dataLoader: DataLoader;
+  saveManager: SaveManager;
 }
 
 export abstract class Scene {

@@ -37,8 +37,44 @@
     "id": "wind_slash",
     "name": "ウィンドスラッシュ",
     "mpCost": 4,
-    "power": 90,
+    "power": 85,
     "element": "wind",
     "target": "all"
+  },
+  {
+    "id": "earth_slash",
+    "name": "アースブレイク",
+    "mpCost": 8,
+    "power": 135,
+    "element": "earth",
+    "target": "single"
+  },
+  {
+    "id": "silence_spell",
+    "name": "サイレス",
+    "mpCost": 6,
+    "power": 0,
+    "element": "none",
+    "target": "single",
+    "effect": "silence",
+    "effectRate": 0.80
+  },
+  {
+    "id": "full_heal",
+    "name": "フルヒール",
+    "mpCost": 20,
+    "power": 250,
+    "element": "none",
+    "target": "self"
+  },
+  {
+    "id": "blaze",
+    "name": "ブレイズ",
+    "mpCost": 12,
+    "power": 160,
+    "element": "fire",
+    "target": "all",
+    "effect": "poison",
+    "effectRate": 0.10
   }
 ]
