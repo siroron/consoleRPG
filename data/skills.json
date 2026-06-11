@@ -1,0 +1,44 @@
+[
+  {
+    "id": "tackle",
+    "name": "たいあたり",
+    "mpCost": 0,
+    "power": 80,
+    "element": "none",
+    "target": "single"
+  },
+  {
+    "id": "fire_bolt",
+    "name": "ファイアボルト",
+    "mpCost": 5,
+    "power": 120,
+    "element": "fire",
+    "target": "single",
+    "effect": "poison",
+    "effectRate": 0.15
+  },
+  {
+    "id": "heal",
+    "name": "ヒール",
+    "mpCost": 8,
+    "power": 100,
+    "element": "none",
+    "target": "self"
+  },
+  {
+    "id": "water_blast",
+    "name": "ウォーターブラスト",
+    "mpCost": 6,
+    "power": 110,
+    "element": "water",
+    "target": "single"
+  },
+  {
+    "id": "wind_slash",
+    "name": "ウィンドスラッシュ",
+    "mpCost": 4,
+    "power": 90,
+    "element": "wind",
+    "target": "all"
+  }
+]

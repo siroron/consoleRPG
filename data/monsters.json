@@ -1,0 +1,35 @@
+[
+  {
+    "id": "slime",
+    "name": "スライム",
+    "element": "water",
+    "stats": { "maxHp": 30, "maxMp": 0, "attack": 8, "defense": 5, "magic": 0, "speed": 5, "luck": 3 },
+    "skills": ["tackle"],
+    "aiType": "aggressive",
+    "exp": 10,
+    "gold": 5,
+    "drops": [{ "itemId": "potion", "rate": 0.3 }]
+  },
+  {
+    "id": "goblin",
+    "name": "ゴブリン",
+    "element": "none",
+    "stats": { "maxHp": 50, "maxMp": 10, "attack": 15, "defense": 8, "magic": 5, "speed": 8, "luck": 5 },
+    "skills": ["tackle", "fire_bolt"],
+    "aiType": "aggressive",
+    "exp": 20,
+    "gold": 12,
+    "drops": [{ "itemId": "herb", "rate": 0.5 }]
+  },
+  {
+    "id": "fire_bat",
+    "name": "ファイアバット",
+    "element": "fire",
+    "stats": { "maxHp": 40, "maxMp": 15, "attack": 12, "defense": 4, "magic": 18, "speed": 14, "luck": 6 },
+    "skills": ["fire_bolt"],
+    "aiType": "smart",
+    "exp": 18,
+    "gold": 10,
+    "drops": []
+  }
+]
