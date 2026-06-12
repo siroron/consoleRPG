@@ -5,6 +5,7 @@ import type { ZodSchema } from 'zod';
 import { MonstersFileSchema, type MonsterData } from './schemas/monster.schema.js';
 import { SkillsFileSchema, type SkillData } from './schemas/skill.schema.js';
 import { EquipmentsFileSchema, type EquipmentData } from './schemas/equipment.schema.js';
+import { ItemsFileSchema, type ItemData } from './schemas/item.schema.js';
 
 export class DataLoadError extends Error {
   constructor(
@@ -52,5 +53,9 @@ export class DataLoader {
 
   async getEquipments(): Promise<EquipmentData[]> {
     return this.load('equipments.json', EquipmentsFileSchema);
+  }
+
+  async getItems(): Promise<ItemData[]> {
+    return this.load('items.json', ItemsFileSchema);
   }
 }

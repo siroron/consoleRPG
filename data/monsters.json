@@ -53,5 +53,27 @@
     "exp": 55,
     "gold": 35,
     "drops": []
+  },
+  {
+    "id": "boss_treant",
+    "name": "大樹の番人 トレント",
+    "element": "earth",
+    "stats": { "maxHp": 280, "maxMp": 40, "attack": 32, "defense": 18, "magic": 22, "speed": 7, "luck": 8 },
+    "skills": ["tackle", "earth_slash", "heal"],
+    "aiType": "smart",
+    "exp": 150,
+    "gold": 120,
+    "drops": [{ "itemId": "hi_potion", "rate": 1.0 }]
+  },
+  {
+    "id": "boss_dragon",
+    "name": "深淵の覇者 ダークドラゴン",
+    "element": "fire",
+    "stats": { "maxHp": 500, "maxMp": 80, "attack": 55, "defense": 30, "magic": 45, "speed": 12, "luck": 10 },
+    "skills": ["blaze", "fire_bolt", "tackle", "wind_slash"],
+    "aiType": "smart",
+    "exp": 500,
+    "gold": 500,
+    "drops": [{ "itemId": "hi_potion", "rate": 1.0 }]
   }
 ]

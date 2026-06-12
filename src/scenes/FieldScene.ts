@@ -20,6 +20,12 @@ const AREA_FLAVOR: Record<AreaId, string> = {
   cave:   '薄暗い洞窟。危険な気配が漂う。',
 };
 
+const AREA_BOSS: Record<AreaId, string | null> = {
+  town:   null,
+  forest: 'boss_treant',
+  cave:   'boss_dragon',
+};
+
 const TRAVEL_DESTINATIONS: Record<AreaId, AreaId[]> = {
   town:   ['forest'],
   forest: ['town', 'cave'],
@@ -39,16 +45,30 @@ export class FieldScene extends Scene {
   }
 
   async update(): Promise<void> {
-    const area = this.ctx.gameState.get('currentArea');
-    const inTown = area === 'town';
+    const area         = this.ctx.gameState.get('currentArea');
+    const inTown       = area === 'town';
     const hasEncounters = canEncounter(area);
+    const bossId       = AREA_BOSS[area];
+    const bossDefeated = this.ctx.gameState.get('bossDefeated');
+    const bossAvailable = bossId !== null && !bossDefeated[area as 'forest' | 'cave'];
 
-    type FieldChoice = 'explore' | 'rest' | 'travel' | 'shop' | 'menu' | 'title';
+    type FieldChoice = 'explore' | 'boss' | 'rest' | 'travel' | 'shop' | 'menu' | 'title';
     const choices: { value: FieldChoice; name: string; disabled?: string | false }[] = [
       {
         value: 'explore',
         name: `【探索】${AREA_LABELS[area]}を進む`,
         disabled: hasEncounters ? false : '(ここでは戦えない)',
+      },
+      {
+        value: 'boss',
+        name: bossDefeated[area as 'forest' | 'cave']
+          ? `【ボス】${AREA_LABELS[area]}のボス ✓撃破済み`
+          : `【ボス】${AREA_LABELS[area]}のボスに挑む`,
+        disabled: bossId === null
+          ? '(このエリアにボスはいない)'
+          : bossDefeated[area as 'forest' | 'cave']
+            ? '(撃破済み)'
+            : false,
       },
       { value: 'rest',   name: '【休憩】野営する（HP/MP全回復）' },
       { value: 'travel', name: '【移動】別のエリアへ' },
@@ -61,11 +81,17 @@ export class FieldScene extends Scene {
       { value: 'title', name: '【タイトルへ戻る】' },
     ];
 
+    // suppress "boss" choice unused warning
+    void bossAvailable;
+
     const choice = await Menu.select<FieldChoice>('何をする？', choices);
 
     switch (choice) {
       case 'explore':
         await this.triggerEncounter();
+        break;
+      case 'boss':
+        if (bossId) await this.triggerBoss(bossId);
         break;
       case 'rest':
         this.restParty();
@@ -91,7 +117,7 @@ export class FieldScene extends Scene {
     console.log(chalk.green.bold(`=== フィールド [${AREA_LABELS[area]}] ===`));
     console.log(chalk.dim(`  ${AREA_FLAVOR[area]}`));
     console.log();
-    const gold = this.ctx.gameState.get('gold');
+    const gold     = this.ctx.gameState.get('gold');
     const playtime = this.ctx.gameState.get('playtime');
     console.log(chalk.yellow(`  Gold: ${gold}G`) + chalk.dim(`  Time: ${formatPlaytime(playtime)}`));
     console.log();
@@ -121,7 +147,7 @@ export class FieldScene extends Scene {
   }
 
   private async handleTravel(): Promise<void> {
-    const area = this.ctx.gameState.get('currentArea');
+    const area         = this.ctx.gameState.get('currentArea');
     const destinations = TRAVEL_DESTINATIONS[area];
 
     const dest = await Menu.select<AreaId>('どこへ移動する？', [
@@ -140,11 +166,23 @@ export class FieldScene extends Scene {
   }
 
   private async triggerEncounter(): Promise<void> {
-    const area = this.ctx.gameState.get('currentArea');
+    const area    = this.ctx.gameState.get('currentArea');
     const enemyIds = getEncounterEnemyIds(area, this.ctx.rng);
     if (enemyIds.length === 0) return;
 
     this.ctx.gameState.set('pendingBattle', { enemyIds });
+    await this.ctx.sceneManager.transition('battle');
+  }
+
+  private async triggerBoss(bossId: string): Promise<void> {
+    const area = this.ctx.gameState.get('currentArea');
+    process.stdout.write('\x1Bc');
+    console.log(chalk.red.bold(`⚠  ${AREA_LABELS[area]}のボスが立ちはだかる！`));
+    console.log();
+    const go = await Menu.confirm('挑みますか？');
+    if (!go) { this.renderField(); return; }
+
+    this.ctx.gameState.set('pendingBattle', { enemyIds: [bossId], isBoss: true });
     await this.ctx.sceneManager.transition('battle');
   }
 }

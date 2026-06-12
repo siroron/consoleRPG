@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "potion",
+    "name": "ポーション",
+    "description": "HPを100回復する",
+    "effect": "heal_hp",
+    "power": 100,
+    "price": 50
+  },
+  {
+    "id": "hi_potion",
+    "name": "ハイポーション",
+    "description": "HPを250回復する",
+    "effect": "heal_hp",
+    "power": 250,
+    "price": 150
+  },
+  {
+    "id": "herb",
+    "name": "薬草",
+    "description": "MPを30回復する",
+    "effect": "heal_mp",
+    "power": 30,
+    "price": 40
+  },
+  {
+    "id": "antidote",
+    "name": "解毒剤",
+    "description": "毒状態を治癒する",
+    "effect": "cure_status",
+    "power": 0,
+    "statusToCure": "poison",
+    "price": 30
+  }
+]

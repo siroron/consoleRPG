@@ -18,6 +18,7 @@ function makeState(overrides: Partial<Parameters<GameState['restore']>[0]> = {})
     ownedEquipment: ['iron_sword', 'leather_mail'],
     inventory: [],
     currentArea: 'forest',
+    bossDefeated: { forest: false, cave: false },
     ...overrides,
   });
   return state;

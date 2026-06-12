@@ -43,6 +43,7 @@ export class SaveManager {
       ownedEquipment: snapshot.ownedEquipment,
       inventory:      snapshot.inventory,
       currentArea:    snapshot.currentArea,
+      bossDefeated:   snapshot.bossDefeated,
     };
 
     // Validate before writing
@@ -81,6 +82,7 @@ export class SaveManager {
       ownedEquipment: parsed.ownedEquipment,
       inventory:      parsed.inventory,
       currentArea:    parsed.currentArea,
+      bossDefeated:   parsed.bossDefeated,
     };
   }
 }

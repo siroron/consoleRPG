@@ -2,11 +2,13 @@ import chalk from 'chalk';
 import { Scene } from './Scene.js';
 import type { SceneContext } from './Scene.js';
 import type { EquipmentData } from '../data-access/schemas/equipment.schema.js';
+import type { ItemData } from '../data-access/schemas/item.schema.js';
 import { buyEquipment, sellEquipment, getSellPrice } from '../systems/ShopSystem.js';
+import { addItem, getItemCount } from '../systems/InventorySystem.js';
 import { formatStatBonus } from '../systems/EquipmentSystem.js';
 import { Menu } from '../ui/Menu.js';
 
-type ShopChoice = 'buy' | 'sell' | 'back';
+type ShopChoice = 'buy_equip' | 'buy_item' | 'sell' | 'back';
 
 export class ShopScene extends Scene {
   constructor(context: SceneContext) {
@@ -14,20 +16,27 @@ export class ShopScene extends Scene {
   }
 
   async update(): Promise<void> {
-    const allEquipments = await this.ctx.dataLoader.getEquipments();
+    const [allEquipments, allItems] = await Promise.all([
+      this.ctx.dataLoader.getEquipments(),
+      this.ctx.dataLoader.getItems(),
+    ]);
 
     let exit = false;
     while (!exit) {
       this.renderHeader();
       const choice = await Menu.select<ShopChoice>('ショップ', [
-        { value: 'buy',  name: '🛒 購入する' },
-        { value: 'sell', name: '💰 売却する' },
-        { value: 'back', name: '↩  街へ戻る' },
+        { value: 'buy_equip', name: '🗡  装備を買う' },
+        { value: 'buy_item',  name: '🎒 アイテムを買う' },
+        { value: 'sell',      name: '💰 装備を売る' },
+        { value: 'back',      name: '↩  街へ戻る' },
       ]);
 
       switch (choice) {
-        case 'buy':
+        case 'buy_equip':
           await this.handleBuy(allEquipments);
+          break;
+        case 'buy_item':
+          await this.handleBuyItems(allItems);
           break;
         case 'sell':
           await this.handleSell(allEquipments);
@@ -151,6 +160,55 @@ export class ShopScene extends Scene {
     } else {
       console.log(chalk.red(`  ${result.message}`));
     }
+    await Menu.input('続ける…');
+  }
+
+  private async handleBuyItems(allItems: ItemData[]): Promise<void> {
+    const gold = this.ctx.gameState.get('gold');
+
+    const choices = [
+      ...allItems.map((item) => {
+        const canAfford = gold >= item.price;
+        const count = getItemCount(this.ctx.gameState.get('inventory'), item.id);
+        const countStr = count > 0 ? chalk.dim(` ×${count}所持`) : '';
+        return {
+          value: item.id,
+          name: `${item.name}${countStr}  ${item.price}G  [${item.description}]`,
+          disabled: canAfford ? (false as const) : '(Gold不足)',
+        };
+      }),
+      { value: 'cancel', name: 'キャンセル' },
+    ];
+
+    const picked = await Menu.select<string>('買うアイテムを選択', choices);
+    if (picked === 'cancel') return;
+
+    const item = allItems.find((i) => i.id === picked)!;
+
+    process.stdout.write('\x1Bc');
+    console.log(chalk.bold(item.name));
+    console.log(chalk.dim(`  ${item.description}`));
+    console.log(chalk.yellow(`  価格: ${item.price}G`));
+    console.log();
+
+    const confirmed = await Menu.confirm('購入しますか？');
+    if (!confirmed) return;
+
+    if (this.ctx.gameState.get('gold') < item.price) {
+      console.log(chalk.red('  Goldが不足しています！'));
+      await Menu.input('続ける…');
+      return;
+    }
+
+    this.ctx.gameState.set('gold', this.ctx.gameState.get('gold') - item.price);
+    this.ctx.gameState.set(
+      'inventory',
+      addItem(this.ctx.gameState.get('inventory'), item.id),
+    );
+
+    process.stdout.write('\x1Bc');
+    console.log(chalk.green(`  ${item.name} を購入した！`));
+    console.log(chalk.yellow(`  残Gold: ${this.ctx.gameState.get('gold')}G`));
     await Menu.input('続ける…');
   }
 }

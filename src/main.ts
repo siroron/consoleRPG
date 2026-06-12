@@ -12,6 +12,7 @@ import { BattleScene } from './scenes/BattleScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { ShopScene } from './scenes/ShopScene.js';
+import { GameClearScene } from './scenes/GameClearScene.js';
 
 async function main(): Promise<void> {
   const eventBus    = new EventBus();
@@ -36,7 +37,8 @@ async function main(): Promise<void> {
   sceneManager.register('battle',  () => new BattleScene(ctx));
   sceneManager.register('gameover', () => new GameOverScene(ctx));
   sceneManager.register('menu',     () => new MenuScene(ctx));
-  sceneManager.register('shop',     () => new ShopScene(ctx));
+  sceneManager.register('shop',      () => new ShopScene(ctx));
+  sceneManager.register('gameclear', () => new GameClearScene(ctx));
 
   const loop = new GameLoop(sceneManager, gameState);
 

@@ -1,4 +1,4 @@
-export type SceneName = 'title' | 'field' | 'battle' | 'menu' | 'shop' | 'gameover';
+export type SceneName = 'title' | 'field' | 'battle' | 'menu' | 'shop' | 'gameover' | 'gameclear';
 
 type EventMap = {
   'scene:change': { to: SceneName };

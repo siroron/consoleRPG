@@ -38,6 +38,7 @@ export const SaveSchema = z.object({
   ownedEquipment: z.array(z.string()),
   inventory:     z.array(z.object({ itemId: z.string(), count: z.number().int().positive() })),
   currentArea:   z.enum(['town', 'forest', 'cave']),
+  bossDefeated:  z.object({ forest: z.boolean(), cave: z.boolean() }),
 });
 
 export type SaveData = z.infer<typeof SaveSchema>;

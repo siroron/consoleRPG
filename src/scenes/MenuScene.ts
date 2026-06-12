@@ -9,7 +9,7 @@ import { getExpToNextLevel, getExpForLevel } from '../systems/LevelSystem.js';
 import { Menu } from '../ui/Menu.js';
 import { renderHpBar, renderMpBar } from '../ui/StatusBar.js';
 
-type TopChoice = 'status' | 'equip' | 'save' | 'back';
+type TopChoice = 'status' | 'equip' | 'items' | 'save' | 'back';
 
 export class MenuScene extends Scene {
   constructor(context: SceneContext) {
@@ -27,6 +27,7 @@ export class MenuScene extends Scene {
       const choice = await Menu.select<TopChoice>('メニュー', [
         { value: 'status', name: '📊 ステータス確認' },
         { value: 'equip',  name: '🗡  装備変更' },
+        { value: 'items',  name: '🎒 アイテム確認' },
         { value: 'save',   name: '💾 セーブする' },
         { value: 'back',   name: '↩  フィールドへ戻る' },
       ]);
@@ -38,6 +39,9 @@ export class MenuScene extends Scene {
           break;
         case 'equip':
           await this.handleEquip(equipmentMap);
+          break;
+        case 'items':
+          await this.showInventory();
           break;
         case 'save':
           await this.handleSave();
@@ -169,6 +173,28 @@ export class MenuScene extends Scene {
     process.stdout.write('\x1Bc');
     const itemName = picked === 'unequip' ? '（なし）' : (equipmentMap.get(picked)?.name ?? picked);
     console.log(chalk.green(`  ${memberData.name} の${slotLabel(slot)}を「${itemName}」に変更した！`));
+    await Menu.input('続ける…');
+  }
+
+  private async showInventory(): Promise<void> {
+    process.stdout.write('\x1Bc');
+    console.log(chalk.bold('=== アイテム ==='));
+    console.log();
+
+    const inventory = this.ctx.gameState.get('inventory');
+    if (inventory.length === 0) {
+      console.log(chalk.dim('  アイテムを持っていない。'));
+    } else {
+      const allItems = await this.ctx.dataLoader.getItems();
+      const itemMap = new Map(allItems.map((i) => [i.id, i]));
+      for (const entry of inventory) {
+        const item = itemMap.get(entry.itemId);
+        const name = item?.name ?? entry.itemId;
+        const desc = item?.description ?? '';
+        console.log(`  ${chalk.white(name.padEnd(14))} ×${entry.count}  ${chalk.dim(desc)}`);
+      }
+    }
+    console.log();
     await Menu.input('続ける…');
   }
 

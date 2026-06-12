@@ -4,15 +4,21 @@ import type { PlayerData } from '../entities/Player.js';
 export type { PlayerData };
 export type AreaId = 'town' | 'forest' | 'cave';
 
+export interface BossFlags {
+  forest: boolean;
+  cave: boolean;
+}
+
 export interface GameStateSnapshot {
   currentScene: SceneName;
   playtime: number;
   gold: number;
   party: PlayerData[];
-  pendingBattle: { enemyIds: string[] } | null;
+  pendingBattle: { enemyIds: string[]; isBoss?: boolean } | null;
   ownedEquipment: string[];
   inventory: { itemId: string; count: number }[];
   currentArea: AreaId;
+  bossDefeated: BossFlags;
 }
 
 const DEFAULT_STATE: GameStateSnapshot = {
@@ -24,6 +30,7 @@ const DEFAULT_STATE: GameStateSnapshot = {
   ownedEquipment: [],
   inventory: [],
   currentArea: 'town',
+  bossDefeated: { forest: false, cave: false },
 };
 
 export class GameState {
