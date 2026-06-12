@@ -39,7 +39,17 @@ export class FieldScene extends Scene {
 
   override async onEnter(): Promise<void> {
     if (this.ctx.gameState.get('party').length === 0) {
-      this.ctx.gameState.set('party', [Player.createDefault().toData()]);
+      const defaultPlayer = Player.createDefault();
+      this.ctx.gameState.set('party', [defaultPlayer.toData()]);
+      // 初期装備を所持リストに追加（ownedEquipment が空の新規ゲームのみ）
+      if (this.ctx.gameState.get('ownedEquipment').length === 0) {
+        const startingGear = [
+          defaultPlayer.equipment.weapon,
+          defaultPlayer.equipment.armor,
+          defaultPlayer.equipment.accessory,
+        ].filter((id): id is string => id !== null);
+        this.ctx.gameState.set('ownedEquipment', startingGear);
+      }
     }
     this.renderField();
   }

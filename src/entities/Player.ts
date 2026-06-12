@@ -100,7 +100,7 @@ export class Player extends Character {
       element: 'none',
       currentHp: 150,
       currentMp: 40,
-      baseStats: { maxHp: 150, maxMp: 40, attack: 25, defense: 15, magic: 20, speed: 12, luck: 8 },
+      baseStats: { maxHp: 150, maxMp: 40, attack: 25, defense: 5, magic: 20, speed: 12, luck: 8 },
       skills: ['tackle', 'fire_bolt', 'wind_slash', 'heal'],
       equipment: { weapon: 'iron_sword', armor: 'leather_mail', accessory: null },
     });

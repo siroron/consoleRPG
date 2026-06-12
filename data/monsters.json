@@ -14,11 +14,11 @@
     "id": "goblin",
     "name": "ゴブリン",
     "element": "none",
-    "stats": { "maxHp": 50, "maxMp": 10, "attack": 15, "defense": 8, "magic": 5, "speed": 8, "luck": 5 },
+    "stats": { "maxHp": 50, "maxMp": 10, "attack": 20, "defense": 8, "magic": 5, "speed": 8, "luck": 5 },
     "skills": ["tackle", "fire_bolt"],
     "aiType": "aggressive",
-    "exp": 20,
-    "gold": 12,
+    "exp": 25,
+    "gold": 15,
     "drops": [{ "itemId": "herb", "rate": 0.5 }]
   },
   {
@@ -36,11 +36,11 @@
     "id": "shadow_wolf",
     "name": "シャドウウルフ",
     "element": "wind",
-    "stats": { "maxHp": 70, "maxMp": 8, "attack": 22, "defense": 10, "magic": 6, "speed": 18, "luck": 7 },
+    "stats": { "maxHp": 70, "maxMp": 8, "attack": 25, "defense": 10, "magic": 6, "speed": 18, "luck": 7 },
     "skills": ["tackle", "wind_slash"],
     "aiType": "aggressive",
-    "exp": 35,
-    "gold": 20,
+    "exp": 40,
+    "gold": 22,
     "drops": []
   },
   {
