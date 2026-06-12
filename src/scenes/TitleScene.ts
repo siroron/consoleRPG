@@ -5,7 +5,7 @@ import { Scene } from './Scene.js';
 import type { SceneContext } from './Scene.js';
 import { Player } from '../entities/Player.js';
 
-type TitleChoice = 'new_game' | 'continue' | 'quit';
+type TitleChoice = 'new_game' | 'continue' | 'delete_save' | 'quit';
 
 export class TitleScene extends Scene {
   constructor(context: SceneContext) {
@@ -21,9 +21,10 @@ export class TitleScene extends Scene {
     const hasSave = await this.ctx.saveManager.hasSave(1);
 
     const choice = await Menu.select<TitleChoice>('Select an option', [
-      { value: 'new_game', name: chalk.white('New Game') },
-      { value: 'continue', name: 'Continue', disabled: hasSave ? false : '(No save data)' },
-      { value: 'quit',     name: chalk.dim('Quit') },
+      { value: 'new_game',    name: chalk.white('New Game') },
+      { value: 'continue',   name: 'Continue',              disabled: hasSave ? false : '(No save data)' },
+      { value: 'delete_save', name: chalk.red('セーブデータを削除'), disabled: hasSave ? false : '(セーブなし)' },
+      { value: 'quit',       name: chalk.dim('Quit') },
     ]);
 
     switch (choice) {
@@ -37,9 +38,34 @@ export class TitleScene extends Scene {
       case 'continue':
         await this.loadAndContinue();
         break;
+      case 'delete_save':
+        await this.handleDeleteSave();
+        break;
       case 'quit':
         await this.ctx.eventBus.emit('game:quit', {});
         break;
+    }
+  }
+
+  private async handleDeleteSave(): Promise<void> {
+    process.stdout.write('\x1Bc');
+    this.renderBanner();
+    console.log(chalk.red.bold('  ⚠  セーブデータを削除すると元に戻せません。'));
+    console.log();
+    const confirmed = await Menu.confirm('本当に削除しますか？', false);
+    if (!confirmed) return;
+
+    try {
+      await this.ctx.saveManager.delete(1);
+      process.stdout.write('\x1Bc');
+      this.renderBanner();
+      console.log(chalk.green('  セーブデータを削除しました。'));
+      console.log();
+    } catch (err) {
+      process.stdout.write('\x1Bc');
+      this.renderBanner();
+      console.log(chalk.red(`  削除に失敗しました: ${String(err)}`));
+      console.log();
     }
   }
 

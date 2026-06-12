@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, unlink } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import type { GameState, GameStateSnapshot } from '../core/GameState.js';
@@ -54,6 +54,14 @@ export class SaveManager {
       await writeFile(this.slotPath(slot), JSON.stringify(data, null, 2), 'utf-8');
     } catch (err) {
       throw new SaveError(`スロット${slot}への保存に失敗しました`, err);
+    }
+  }
+
+  async delete(slot: number): Promise<void> {
+    try {
+      await unlink(this.slotPath(slot));
+    } catch (err) {
+      throw new SaveError(`スロット${slot}の削除に失敗しました`, err);
     }
   }
 

@@ -5,7 +5,8 @@ import type { EquipmentData } from '../data-access/schemas/equipment.schema.js';
 import type { ItemData } from '../data-access/schemas/item.schema.js';
 import { buyEquipment, sellEquipment, getSellPrice } from '../systems/ShopSystem.js';
 import { addItem, getItemCount } from '../systems/InventorySystem.js';
-import { formatStatBonus } from '../systems/EquipmentSystem.js';
+import { formatStatBonus, formatStatComparison } from '../systems/EquipmentSystem.js';
+import type { Stats } from '../entities/Stats.js';
 import { Menu } from '../ui/Menu.js';
 
 type ShopChoice = 'buy_equip' | 'buy_item' | 'sell' | 'back';
@@ -93,6 +94,15 @@ export class ShopScene extends Scene {
     console.log(chalk.dim(`  ${equipment.description}`));
     console.log(chalk.dim(`  ボーナス: ${formatStatBonus(equipment.statBonus)}`));
     console.log(chalk.yellow(`  価格: ${equipment.price}G`));
+    console.log();
+
+    const party = this.ctx.gameState.get('party');
+    const slot = equipment.type as 'weapon' | 'armor' | 'accessory';
+    const currentEquippedId = party[0]?.equipment[slot] ?? null;
+    const currentBonus: Partial<Stats> =
+      currentEquippedId ? (allEquipments.find((e) => e.id === currentEquippedId)?.statBonus ?? {}) : {};
+    console.log(chalk.bold('  ステータス変化 (装備時):'));
+    for (const line of formatStatComparison(equipment.statBonus, currentBonus)) console.log(line);
     console.log();
 
     const confirmed = await Menu.confirm('購入しますか？');

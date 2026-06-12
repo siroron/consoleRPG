@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { Stats } from '../entities/Stats.js';
 import type { Player } from '../entities/Player.js';
 import type { EquipmentData, EquipmentSlot } from '../data-access/schemas/equipment.schema.js';
@@ -57,4 +58,27 @@ export function formatStatBonus(bonus: Partial<Stats>): string {
   if (bonus.speed)   parts.push(`SPD+${bonus.speed}`);
   if (bonus.luck)    parts.push(`LCK+${bonus.luck}`);
   return parts.length > 0 ? parts.join(' ') : '---';
+}
+
+export function formatStatComparison(
+  candidate: Partial<Stats>,
+  current: Partial<Stats>,
+): string[] {
+  const STAT_KEYS: (keyof Stats)[] = ['attack', 'defense', 'magic', 'speed', 'luck', 'maxHp', 'maxMp'];
+  const STAT_LABELS: Record<keyof Stats, string> = {
+    attack: 'ATK', defense: 'DEF', magic: 'MAG', speed: 'SPD', luck: 'LCK', maxHp: 'HP', maxMp: 'MP',
+  };
+  const lines: string[] = [];
+  for (const key of STAT_KEYS) {
+    const newVal = candidate[key] ?? 0;
+    const oldVal = current[key] ?? 0;
+    if (newVal === 0 && oldVal === 0) continue;
+    const diff = newVal - oldVal;
+    const diffStr = diff > 0 ? `(+${diff})` : diff < 0 ? `(${diff})` : '(±0)';
+    const line = `  ${STAT_LABELS[key]}: ${oldVal} → ${newVal} ${diffStr}`;
+    if (diff > 0)      lines.push(chalk.green(line));
+    else if (diff < 0) lines.push(chalk.red(line));
+    else               lines.push(chalk.dim(line));
+  }
+  return lines.length > 0 ? lines : [chalk.dim('  (変化なし)')];
 }

@@ -117,4 +117,17 @@ describe('SaveManager', () => {
     expect(s1.gold).toBe(100);
     expect(s2.gold).toBe(200);
   });
+
+  it('delete — セーブファイルを削除し hasSave が false になる', async () => {
+    await manager.save(makeState(), 1);
+    expect(await manager.hasSave(1)).toBe(true);
+
+    await manager.delete(1);
+
+    expect(await manager.hasSave(1)).toBe(false);
+  });
+
+  it('delete — 存在しないスロットは SaveError をスローする', async () => {
+    await expect(manager.delete(99)).rejects.toThrow(SaveError);
+  });
 });

@@ -24,36 +24,37 @@ export function resolveAction(
 ): ActionResult {
   if (action.type === 'defend') {
     actor.isDefending = true;
-    return { hits: [], logs: [`${actor.name} は防御した！`] };
+    return { hits: [], logs: [`🛡 ${actor.name} は防御した！`] };
   }
 
   // Check silence: cannot use MP-cost skills
   if (actor.hasStatus('silence') && action.skill.mpCost > 0) {
-    return { hits: [], logs: [`${actor.name} は沈黙で魔法が使えない！`] };
+    return { hits: [], logs: [`🌀 ${actor.name} は沈黙で魔法が使えない！`] };
   }
 
   const { skill, targets } = action;
   const hits = executeSkill(actor, targets, skill, rng);
 
-  const logs: string[] = [`${actor.name} は ${skill.name} を使った！`];
+  const logs: string[] = [`✨ ${actor.name} は ${skill.name} を使った！`];
 
   for (const hit of hits) {
     if (hit.healed > 0) {
-      logs.push(`  ${hit.target.name} の HP が ${hit.healed} 回復した！`);
+      logs.push(`  💊 ${hit.target.name} の HP が ${hit.healed} 回復した！`);
     } else if (hit.damage > 0) {
-      let line = `  ${hit.target.name} に ${hit.damage} のダメージ！`;
+      const icon = hit.isCrit ? '⚡' : '⚔';
+      let line = `  ${icon} ${hit.target.name} に ${hit.damage} のダメージ！`;
       if (hit.isCrit) line += ' 【クリティカル！】';
-      if (hit.elementMultiplier >= 2.0) line += ' ⚡効果抜群！';
+      if (hit.elementMultiplier >= 2.0) line += ' 効果抜群！';
       else if (hit.elementMultiplier <= 0.5) line += ' ↓効果が薄い…';
       logs.push(line);
     }
 
     if (hit.statusApplied) {
-      logs.push(`  ${hit.target.name} は ${formatStatusName(hit.statusApplied)} 状態になった！`);
+      logs.push(`  🌀 ${hit.target.name} は ${formatStatusName(hit.statusApplied)} 状態になった！`);
     }
 
     if (hit.target.isKO) {
-      logs.push(`  ${hit.target.name} は倒れた！`);
+      logs.push(`  💀 ${hit.target.name} は倒れた！`);
     }
   }
 

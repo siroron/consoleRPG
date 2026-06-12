@@ -4,7 +4,8 @@ import type { SceneContext } from './Scene.js';
 import { Player } from '../entities/Player.js';
 import type { EquipmentSlots } from '../entities/Player.js';
 import type { EquipmentData } from '../data-access/schemas/equipment.schema.js';
-import { applyEquipmentBonuses, computeEquipmentBonuses, formatStatBonus } from '../systems/EquipmentSystem.js';
+import { applyEquipmentBonuses, formatStatBonus, formatStatComparison } from '../systems/EquipmentSystem.js';
+import type { Stats } from '../entities/Stats.js';
 import { getExpToNextLevel, getExpForLevel } from '../systems/LevelSystem.js';
 import { Menu } from '../ui/Menu.js';
 import { renderHpBar, renderMpBar } from '../ui/StatusBar.js';
@@ -155,11 +156,19 @@ export class MenuScene extends Scene {
     const newEquip: EquipmentSlots = { ...memberData.equipment };
     newEquip[slot] = picked === 'unequip' ? null : picked;
 
-    // Preview bonuses
-    const bonuses = computeEquipmentBonuses(newEquip, equipmentMap);
+    // Preview stat diff
+    const currentBonus: Partial<Stats> =
+      memberData.equipment[slot] ? (equipmentMap.get(memberData.equipment[slot]!)?.statBonus ?? {}) : {};
+    const newBonus: Partial<Stats> =
+      picked === 'unequip' ? {} : (equipmentMap.get(picked)?.statBonus ?? {});
+
     process.stdout.write('\x1Bc');
     console.log(chalk.bold(`${memberData.name} の装備を変更します`));
-    console.log(chalk.dim(`  装備ボーナス合計: ${formatStatBonus(bonuses)}`));
+    console.log(chalk.dim(`  現在: ${this.equipName(memberData.equipment[slot], equipmentMap)}`));
+    console.log(chalk.dim(`  変更後: ${picked === 'unequip' ? '（なし）' : (equipmentMap.get(picked)?.name ?? picked)}`));
+    console.log();
+    console.log(chalk.bold('  ステータス変化:'));
+    for (const line of formatStatComparison(newBonus, currentBonus)) console.log(line);
     console.log();
 
     const confirmed = await Menu.confirm('この装備にしますか？');

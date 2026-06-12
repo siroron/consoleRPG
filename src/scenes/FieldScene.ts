@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import boxen from 'boxen';
 import { Scene } from './Scene.js';
 import type { SceneContext } from './Scene.js';
 import type { AreaId } from '../core/GameState.js';
@@ -123,9 +124,25 @@ export class FieldScene extends Scene {
 
   private renderField(): void {
     process.stdout.write('\x1Bc');
-    const area = this.ctx.gameState.get('currentArea');
-    console.log(chalk.green.bold(`=== フィールド [${AREA_LABELS[area]}] ===`));
-    console.log(chalk.dim(`  ${AREA_FLAVOR[area]}`));
+    const area         = this.ctx.gameState.get('currentArea');
+    const bossId       = AREA_BOSS[area];
+    const bossDefeated = this.ctx.gameState.get('bossDefeated');
+    let bossLine = '';
+    if (bossId !== null) {
+      const defeated = bossDefeated[area as 'forest' | 'cave'];
+      bossLine = '\n' + (defeated
+        ? chalk.green.dim('  🏆 ボス討伐済み')
+        : chalk.yellow('  ⚠  ボス健在'));
+    }
+    const cardContent =
+      chalk.bold.green(AREA_LABELS[area]) +
+      '\n' + chalk.dim(AREA_FLAVOR[area]) +
+      bossLine;
+    console.log(boxen(cardContent, {
+      padding: { top: 0, bottom: 0, left: 1, right: 2 },
+      borderStyle: 'round',
+      borderColor: 'green',
+    }));
     console.log();
     const gold     = this.ctx.gameState.get('gold');
     const playtime = this.ctx.gameState.get('playtime');
